@@ -1,0 +1,37 @@
+package com.lopez.app.restaurante.models.Enum;
+
+public enum EnumEstado {
+    AGUASCALIENTES,
+    BAJA_CALIFORNIA,
+    BAJA_CALIFORNIA_SUR,
+    CAMPECHE,
+    CHIAPAS,
+    CHIHUAHUA,
+    COAHUILA,
+    COLIMA,
+    CIUDAD_DE_MEXICO,
+    DURANGO,
+    GUANAJUATO,
+    GUERRERO,
+    HIDALGO,
+    JALISCO,
+    MEXICO,
+    MICHOACAN,
+    MORELOS,
+    NAYARIT,
+    NUEVO_LEON,
+    OAXACA,
+    PUEBLA,
+    QUERETARO,
+    QUINTANA_ROO,
+    SAN_LUIS_POTOSI,
+    SINALOA,
+    SONORA,
+    TABASCO,
+    TAMAULIPAS,
+    TLAXCALA,
+    VERACRUZ,
+    YUCATAN,
+    ZACATECAS
+
+}
