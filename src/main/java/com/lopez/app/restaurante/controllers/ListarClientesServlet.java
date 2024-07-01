@@ -30,7 +30,7 @@ public class ListarClientesServlet extends HttpServlet {
         resp.setContentType("application/jason");
         Map<String, String> response = new HashMap<>();
 
-        Long id = null;
+        // Long id = null;
         try (PrintWriter out = resp.getWriter()) {
             resp.setStatus(201);
             response.put("mensaje", clientes.toString());
