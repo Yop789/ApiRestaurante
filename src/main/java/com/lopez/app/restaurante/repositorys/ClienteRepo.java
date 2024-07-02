@@ -130,10 +130,11 @@ public class ClienteRepo implements IRepository<Cliente> {
 
     @Override
     public Long guardarReturnId(Cliente t) throws SQLException {
-        String sql = "INSERT INTO CLIENTES(ID_CLIENTE,NOMBRE,AP_PATERNO,AP_MATERNO,TELEFONO,CORREO,CALLE,NUMERO_INT,NUMERO_EXT,COLONIA,CIUDAD,ESTADO,CODIGO_POSTAL,FECHA_NACIMIENTO) "
+        String sql = "INSERT INTO CLIENTES(ID_CLIENTE, NOMBRE, AP_PATERNO, AP_MATERNO, TELEFONO, CORREO, CALLE, NUMERO_INT, NUMERO_EXT, COLONIA, CIUDAD, ESTADO, CODIGO_POSTAL, FECHA_NACIMIENTO) "
                 +
-                "VALUES(SEQUENCE_CLIENTE.NEXTVAL,?,?,?,?,?,?,?,?,?,?,?,?,?)";
-        try (PreparedStatement stm = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+                "VALUES (SEQUENCE_CLIENTE.NEXTVAL, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+
+        try (PreparedStatement stm = conn.prepareStatement(sql, new String[] { "ID_CLIENTE" })) {
             stm.setString(1, t.getNombre());
             stm.setString(2, t.getApPaterno());
             stm.setString(3, t.getApMaterno());
@@ -144,17 +145,19 @@ public class ClienteRepo implements IRepository<Cliente> {
             stm.setLong(8, t.getNum_exterior());
             stm.setString(9, t.getColonia());
             stm.setString(10, t.getCiudad());
-            stm.setString(11, t.getEstado().name().toString());
+            stm.setString(11, t.getEstado().name()); // Asumiendo que Estado es un Enum
             stm.setInt(12, t.getCp());
             stm.setDate(13, Date.valueOf(t.getFecha_nacimiento()));
             stm.executeUpdate();
+
             ResultSet rs = stm.getGeneratedKeys();
             if (rs.next()) {
                 return rs.getLong(1);
             }
         } catch (SQLException e) {
-            throw new SQLException(e);
+            throw new SQLException("Error al insertar nuevo cliente", e);
         }
-        return null;
+
+        return 0L;
     }
 }

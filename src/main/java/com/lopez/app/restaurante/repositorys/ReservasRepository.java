@@ -57,12 +57,12 @@ public class ReservasRepository implements IRepository<Reservacio> {
         if (t.getId() != null && t.getId() > 0) {
             sql = "UPDATE RESERVAS SET ID_MESA=?,ID_CLIENTE=?,FECHA=?,FECHA_A_RESERVAR=?,ESTATUS=? WHERE ID_RESERVA=?";
         } else {
-            sql = "INSERT INTO RESERVAS(ID_RESERVA,ID_CLIENTE,ID_MESA,FECHA,FECHA_A_RESERVAR,ESTATUS) VALUES(SEQUENCE_RESERVAS.NEXTVAL,?,?,?,?,?)";
+            sql = "INSERT INTO RESERVAS(ID_RESERVA,ID_MESA,ID_CLIENTE,FECHA,FECHA_A_RESERVAR,ESTATUS) VALUES(SEQUENCE_RESERVAS.NEXTVAL,?,?,?,?,?)";
         }
         try (PreparedStatement stm = conn.prepareStatement(sql)) {
 
-            stm.setLong(1, t.getId_cliente());
-            stm.setLong(2, t.getId_mesa());
+            stm.setLong(1, t.getId_mesa());
+            stm.setLong(2, t.getId_cliente());
             stm.setDate(3, Date.valueOf(t.getFecha()));
             stm.setTimestamp(4, Timestamp.valueOf(t.getFecha_a_reservar()));
             stm.setString(5, t.getEstatus().toString());

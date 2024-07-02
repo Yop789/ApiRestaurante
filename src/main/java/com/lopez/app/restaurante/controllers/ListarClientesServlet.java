@@ -36,11 +36,9 @@ public class ListarClientesServlet extends HttpServlet {
         IService<Cliente> serviceCli = new ClienteService(conn);
         IReservasService<Reservacio> servicerRes = new ReservasService(conn);
 
-        // Se decalaran variables para el manejo de las fechas
         SimpleDateFormat inputFormat = new SimpleDateFormat("yyyy-MM-dd");
         SimpleDateFormat outputFormat = new SimpleDateFormat("dd/MM/yyyy");
 
-        // Se optienen los datos del formulario
         String nombre = req.getParameter("nombre");
         String apPaterno = req.getParameter("apPaterno");
         String apMaterno = req.getParameter("apMaterno");
@@ -54,7 +52,6 @@ public class ListarClientesServlet extends HttpServlet {
         String cpParam = req.getParameter("cp");
         String estado = req.getParameter("estado");
 
-        // Se declara un map para los errores
         Map<String, String> errors = new HashMap<>();
 
         Long id_mesa = null;
@@ -120,6 +117,7 @@ public class ListarClientesServlet extends HttpServlet {
                 errors.put("num_interno", "El número interno debe ser un número válido");
             }
         }
+
         if (numExteriorParam == null || numExteriorParam.isEmpty()) {
             errors.put("numExterior", "El número externo es requerido");
         } else {
@@ -157,57 +155,59 @@ public class ListarClientesServlet extends HttpServlet {
                     "La fecha de nacimiento es requerida y debe tener el formato válido (YYYY-MM-DD)");
         }
 
-        resp.setContentType("application/jason");
+        resp.setContentType("application/json");
 
-        Long id = null;
-        try (PrintWriter out = resp.getWriter()) {
-            resp.setStatus(201);
-            errors.put("mensaje", id.toString());
-            errors.put("status", "success");
-            String json = new Gson().toJson(errors);
+        if (!errors.isEmpty()) {
+            try (PrintWriter out = resp.getWriter()) {
+                Gson gson = new Gson();
+                String jsonErrors = gson.toJson(errors);
+                out.print(jsonErrors);
+            }
+        } else {
+            try (PrintWriter out = resp.getWriter()) {
+                Cliente cliente = new Cliente();
+                cliente.setNombre(nombre);
+                cliente.setApPaterno(apPaterno);
+                cliente.setApMaterno(apMaterno);
+                cliente.setTelefono(telefono);
+                cliente.setCorreo(correo);
+                cliente.setCalle(calle);
+                cliente.setNum_interior(num_interno != 0 ? num_interno : 0);
+                cliente.setNum_exterior(num_externo);
+                cliente.setColonia(colonia);
+                cliente.setCiudad(ciudad);
+                cliente.setCp(cp);
+                cliente.setEstado(EnumEstado.valueOf(estado));
+                cliente.setFecha_nacimiento(fecha);
 
-            out.print(json);
-        } catch (Exception e) {
-            e.printStackTrace();
+                try {
+                    serviceCli.guardar(cliente);
+                    Long id = serviceCli.guardarReturnId(cliente);
+
+                    if (id != null) {
+                        Reservacio reservacio = new Reservacio();
+                        reservacio.setId_mesa(id_mesa);
+                        reservacio.setId_cliente(id);
+                        reservacio.setFecha_a_reservar(fechaAReservar);
+                        reservacio.setFecha(LocalDate.now());
+                        reservacio.setEstatus(EnumReservacion.EN_CURSO);
+
+                        servicerRes.guardar(reservacio);
+                        out.print("OK");
+                    } else {
+                        errors.put("cliente", "Error al guardar el cliente");
+                        Gson gson = new Gson();
+                        String jsonErrors = gson.toJson(errors);
+                        out.print(jsonErrors);
+                    }
+                } catch (Exception e) {
+                    errors.put("reservacion", "Error al guardar la reservación: " + e.getMessage());
+                    Gson gson = new Gson();
+                    String jsonErrors = gson.toJson(errors);
+                    out.print(jsonErrors);
+                }
+            }
         }
-
-        // if (errors.isEmpty()) {
-        // Cliente cliente = new Cliente();
-        // cliente.setNombre(nombre);
-        // cliente.setApPaterno(apPaterno);
-        // cliente.setApMaterno(apMaterno);
-        // cliente.setTelefono(telefono);
-        // cliente.setCorreo(correo);
-        // cliente.setCalle(calle);
-        // cliente.setNum_interior(num_interno != 0 ? num_interno : 0);
-        // cliente.setNum_exterior(num_externo);
-        // cliente.setColonia(colonia);
-        // cliente.setCiudad(ciudad);
-        // cliente.setCp(cp);
-        // cliente.setEstado(EnumEstado.valueOf(estado));
-        // cliente.setFecha_nacimiento(fecha);
-        // service.guardar(cliente);
-        // resp.sendRedirect(req.getContextPath() + "/clientes/listar");
-        // }
-        // try {
-        // id_cliente = Long.parseLong(req.getParameter("id_cliente"));
-        // } catch (NumberFormatException e) {
-        // errors.put("id_cliente", "Debe seleccionar un cliente válido");
-        // }
-        // if (errors.isEmpty()) {
-        // Reservacio reservacion = new Reservacio();
-        // reservacion.setId_mesa(id_mesa);
-        // reservacion.setId_cliente(id_cliente);
-        // reservacion.setFecha(LocalDate.now()); // Fecha actual
-        // reservacion.setFecha_a_reservar(fechaAReservar);
-        // reservacion.setEstatus(EnumReservacion.valueOf(estatus));
-
-        // service.guardar(reservacion);
-        // resp.sendRedirect(req.getContextPath() + "/reservaciones/listar");
-        // } else {
-        // req.setAttribute("errors", errors);
-        // doGet(req, resp); // Volver a mostrar el formulario con errores
-        // }
     }
 
 }
