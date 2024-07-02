@@ -68,4 +68,10 @@ public class DescripcioService implements IDescripcioOrdenService<DescripcioOrde
         }
     }
 
+    @Override
+    public Long guardarReturnId(DescripcioOrden t) {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'guardarReturnId'");
+    }
+
 }

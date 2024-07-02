@@ -128,4 +128,10 @@ public class ClienteRepo implements IRepository<Cliente> {
         c.setFecha_nacimiento(rs.getDate("FECHA_NACIMIENTO").toLocalDate());
         return c;
     }
+
+    @Override
+    public Long guardarReturnId(Cliente t) throws SQLException {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'guardarReturnId'");
+    }
 }

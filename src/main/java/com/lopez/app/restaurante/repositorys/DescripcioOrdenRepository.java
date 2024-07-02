@@ -62,4 +62,10 @@ public class DescripcioOrdenRepository implements IRepository<DescripcioOrden> {
         return descripcio;
     }
 
+    @Override
+    public Long guardarReturnId(DescripcioOrden t) throws SQLException {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'guardarReturnId'");
+    }
+
 }

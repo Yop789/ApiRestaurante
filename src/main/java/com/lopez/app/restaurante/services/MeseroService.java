@@ -50,4 +50,10 @@ public class MeseroService implements IService<Mesero> {
         }
     }
 
+    @Override
+    public Long guardarReturnId(Mesero t) {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'guardarReturnId'");
+    }
+
 }

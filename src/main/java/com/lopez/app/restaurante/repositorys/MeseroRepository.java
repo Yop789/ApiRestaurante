@@ -120,4 +120,10 @@ public class MeseroRepository implements IRepository<Mesero> {
         mesero.setEdad(rs.getLong("EDAD"));
         return mesero;
     }
+
+    @Override
+    public Long guardarReturnId(Mesero t) throws SQLException {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'guardarReturnId'");
+    }
 }

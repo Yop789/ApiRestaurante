@@ -78,4 +78,10 @@ public class OrdenarService implements IOrdenarService<Ordenar> {
         }
     }
 
+    @Override
+    public Long guardarReturnId(Ordenar t) {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'guardarReturnId'");
+    }
+
 }

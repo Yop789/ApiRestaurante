@@ -127,4 +127,34 @@ public class ClienteRepo implements IRepository<Cliente> {
         c.setFecha_nacimiento(rs.getDate("FECHA_NACIMIENTO").toLocalDate());
         return c;
     }
+
+    @Override
+    public Long guardarReturnId(Cliente t) throws SQLException {
+        String sql = "INSERT INTO CLIENTES(ID_CLIENTE,NOMBRE,AP_PATERNO,AP_MATERNO,TELEFONO,CORREO,CALLE,NUMERO_INT,NUMERO_EXT,COLONIA,CIUDAD,ESTADO,CODIGO_POSTAL,FECHA_NACIMIENTO) "
+                +
+                "VALUES(SEQUENCE_CLIENTE.NEXTVAL,?,?,?,?,?,?,?,?,?,?,?,?,?)";
+        try (PreparedStatement stm = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+            stm.setString(1, t.getNombre());
+            stm.setString(2, t.getApPaterno());
+            stm.setString(3, t.getApMaterno());
+            stm.setString(4, t.getTelefono());
+            stm.setString(5, t.getCorreo());
+            stm.setString(6, t.getCalle());
+            stm.setLong(7, t.getNum_interior());
+            stm.setLong(8, t.getNum_exterior());
+            stm.setString(9, t.getColonia());
+            stm.setString(10, t.getCiudad());
+            stm.setString(11, t.getEstado().name().toString());
+            stm.setInt(12, t.getCp());
+            stm.setDate(13, Date.valueOf(t.getFecha_nacimiento()));
+            stm.executeUpdate();
+            ResultSet rs = stm.getGeneratedKeys();
+            if (rs.next()) {
+                return rs.getLong(1);
+            }
+        } catch (SQLException e) {
+            throw new SQLException(e);
+        }
+        return null;
+    }
 }

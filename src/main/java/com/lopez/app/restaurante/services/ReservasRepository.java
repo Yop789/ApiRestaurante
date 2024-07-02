@@ -97,4 +97,10 @@ public class ReservasRepository implements IRepository<Reservacio> {
         return reservacio;
     }
 
+    @Override
+    public Long guardarReturnId(Reservacio t) throws SQLException {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'guardarReturnId'");
+    }
+
 }

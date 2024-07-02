@@ -13,4 +13,6 @@ public interface IService<T> {
 
     void eliminar(Long id);
 
+    Long guardarReturnId(T t);
+
 }

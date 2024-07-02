@@ -12,4 +12,6 @@ public interface IRepository<T> {
     void guardar(T t) throws SQLException;
 
     void eliminar(Long id) throws SQLException;
+
+    Long guardarReturnId(T t) throws SQLException;
 }

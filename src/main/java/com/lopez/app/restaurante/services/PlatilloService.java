@@ -51,4 +51,10 @@ public class PlatilloService implements IService<Platillo> {
         }
     }
 
+    @Override
+    public Long guardarReturnId(Platillo t) {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'guardarReturnId'");
+    }
+
 }

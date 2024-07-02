@@ -90,4 +90,10 @@ public class MesaRepository implements IRepository<Mesa> {
         return mesa;
     }
 
+    @Override
+    public Long guardarReturnId(Mesa t) throws SQLException {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'guardarReturnId'");
+    }
+
 }

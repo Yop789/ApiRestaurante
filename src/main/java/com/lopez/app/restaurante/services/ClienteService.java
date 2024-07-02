@@ -4,7 +4,6 @@ import com.lopez.app.restaurante.models.Cliente;
 import com.lopez.app.restaurante.repositorys.ClienteRepo;
 import com.lopez.app.restaurante.repositorys.IRepository;
 
-
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.List;
@@ -50,6 +49,15 @@ public class ClienteService implements IService<Cliente> {
     public void eliminar(Long id) {
         try {
             clienteRepo.eliminar(id);
+        } catch (SQLException e) {
+            throw new RuntimeException(e.getMessage(), e.getCause());
+        }
+    }
+
+    @Override
+    public Long guardarReturnId(Cliente t) {
+        try {
+            return clienteRepo.guardarReturnId(t);
         } catch (SQLException e) {
             throw new RuntimeException(e.getMessage(), e.getCause());
         }

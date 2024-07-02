@@ -85,4 +85,10 @@ public class OrdenRepository implements IRepository<Ordenar> {
         return orden;
     }
 
+    @Override
+    public Long guardarReturnId(Ordenar t) throws SQLException {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'guardarReturnId'");
+    }
+
 }

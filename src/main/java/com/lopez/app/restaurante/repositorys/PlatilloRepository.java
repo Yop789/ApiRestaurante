@@ -86,4 +86,10 @@ public class PlatilloRepository implements IRepository<Platillo> {
         return platillo;
     }
 
+    @Override
+    public Long guardarReturnId(Platillo t) throws SQLException {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'guardarReturnId'");
+    }
+
 }

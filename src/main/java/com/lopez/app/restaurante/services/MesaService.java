@@ -51,4 +51,10 @@ public class MesaService implements IService<Mesa> {
         }
     }
 
+    @Override
+    public Long guardarReturnId(Mesa t) {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'guardarReturnId'");
+    }
+
 }

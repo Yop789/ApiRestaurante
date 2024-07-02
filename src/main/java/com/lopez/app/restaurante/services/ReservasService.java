@@ -75,4 +75,10 @@ public class ReservasService implements IReservasService<Reservacio> {
         }
     }
 
+    @Override
+    public Long guardarReturnId(Reservacio t) {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'guardarReturnId'");
+    }
+
 }
