@@ -12,6 +12,7 @@ public class Reservacio {
     private LocalDate fecha;
     private LocalDateTime fecha_a_reservar;
     private EnumReservacion estatus;
+    private String idOrderPypal;
 
     public Long getId() {
         return id;
@@ -59,6 +60,14 @@ public class Reservacio {
 
     public void setEstatus(EnumReservacion estatus) {
         this.estatus = estatus;
+    }
+
+    public String getIdOrderPypal() {
+        return idOrderPypal;
+    }
+
+    public void setIdOrderPypal(String idOrderPypal) {
+        this.idOrderPypal = idOrderPypal;
     }
 
 }

@@ -51,6 +51,7 @@ public class ListarClientesServlet extends HttpServlet {
         String ciudad = req.getParameter("ciudad");
         String cpParam = req.getParameter("cp");
         String estado = req.getParameter("estado");
+        String payid = req.getParameter("ordenToken");
 
         Map<String, String> errors = new HashMap<>();
 
@@ -191,6 +192,7 @@ public class ListarClientesServlet extends HttpServlet {
                         reservacio.setFecha_a_reservar(fechaAReservar);
                         reservacio.setFecha(LocalDate.now());
                         reservacio.setEstatus(EnumReservacion.EN_CURSO);
+                        reservacio.setIdOrderPypal(payid);
 
                         servicerRes.guardar(reservacio);
                         out.print("OK");

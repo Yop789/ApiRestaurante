@@ -55,19 +55,21 @@ public class ReservasRepository implements IRepository<Reservacio> {
     public void guardar(Reservacio t) throws SQLException {
         String sql = "";
         if (t.getId() != null && t.getId() > 0) {
-            sql = "UPDATE RESERVAS SET ID_MESA=?,ID_CLIENTE=?,FECHA=?,FECHA_A_RESERVAR=?,ESTATUS=? WHERE ID_RESERVA=?";
+            sql = "UPDATE RESERVAS SET ID_MESA=?,ID_CLIENTE=?,FECHA=?,FECHA_A_RESERVAR=?,ESTATUS=?,IDORDERPYPAL=? WHERE ID_RESERVA=?";
         } else {
-            sql = "INSERT INTO RESERVAS(ID_RESERVA,ID_MESA,ID_CLIENTE,FECHA,FECHA_A_RESERVAR,ESTATUS) VALUES(SEQUENCE_RESERVAS.NEXTVAL,?,?,?,?,?)";
+            sql = "INSERT INTO RESERVAS(ID_RESERVA,ID_MESA,ID_CLIENTE,FECHA,FECHA_A_RESERVAR,ESTATUS,IDORDERPYPAL) VALUES(SEQUENCE_RESERVAS.NEXTVAL,?,?,?,?,?,?)";
         }
         try (PreparedStatement stm = conn.prepareStatement(sql)) {
-
             stm.setLong(1, t.getId_mesa());
+
             stm.setLong(2, t.getId_cliente());
+
             stm.setDate(3, Date.valueOf(t.getFecha()));
             stm.setTimestamp(4, Timestamp.valueOf(t.getFecha_a_reservar()));
             stm.setString(5, t.getEstatus().toString());
+            stm.setString(6, t.getIdOrderPypal());
             if (t.getId() != null && t.getId() > 0) {
-                stm.setLong(6, t.getId());
+                stm.setLong(7, t.getId());
             }
             stm.executeUpdate();
         } catch (SQLException e) {
@@ -93,6 +95,7 @@ public class ReservasRepository implements IRepository<Reservacio> {
         reservacio.setFecha(rs.getDate("FECHA").toLocalDate());
         reservacio.setFecha_a_reservar(rs.getTimestamp("FECHA_A_RESERVAR").toLocalDateTime());
         reservacio.setEstatus(EnumReservacion.valueOf(rs.getString("ESTATUS")));
+        reservacio.setIdOrderPypal(rs.getString("IDORDERPYPAL"));
         return reservacio;
     }
 

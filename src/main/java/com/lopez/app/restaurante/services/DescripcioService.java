@@ -40,8 +40,11 @@ public class DescripcioService implements IDescripcioOrdenService<DescripcioOrde
 
     @Override
     public void guardar(DescripcioOrden t) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'guardar'");
+        try {
+            descripcioRepo.guardar(t);
+        } catch (Exception e) {
+            throw new RuntimeException(e.getMessage(), e.getCause());
+        }
     }
 
     @Override

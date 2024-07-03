@@ -1,5 +1,6 @@
 package com.lopez.app.restaurante.controllers;
 
+import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.sql.Connection;
@@ -11,6 +12,9 @@ import java.util.Map;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import com.lopez.app.restaurante.models.DescripcioOrden;
+import com.lopez.app.restaurante.models.InnerDescriopcionPedido;
+import com.lopez.app.restaurante.models.Enum.EnumEstatusDetalleOrder;
+import com.lopez.app.restaurante.services.DescripcioService;
 import com.lopez.app.restaurante.services.IDescripcioOrdenService;
 
 import jakarta.servlet.ServletException;
@@ -23,36 +27,32 @@ import jakarta.servlet.http.HttpServletResponse;
 
 public class DescriopcionPedido extends HttpServlet {
 
-    public class InnerDescriopcionPedido {
-        String idPlatillo;
-        Integer cantidad;
-
-    }
-
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         Connection conn = (Connection) req.getAttribute("conn");
         Map<String, String> errors = new HashMap<>();
-        IDescripcioOrdenService<DescripcioOrden> service = new IDescripcioOrdenService<T>(conn);
+        IDescripcioOrdenService<DescripcioOrden> service = new DescripcioService(conn);
 
-        // Ayudame a optener esto
-        // idOrden
-        // :
-        // "2"
-        // platillos
-        // :
-        // [{idPlatillo: "2", nombrePlatillo: "PLATILLO 2 $500.0 ", cantidad: "30"},…]
-        // 0
-        // :
-        // {idPlatillo: "2", nombrePlatillo: "PLATILLO 2 $500.0 ", cantidad: "30"}
-        // 1
-        // :
-        // {idPlatillo: "3", nombrePlatillo: "PLATILLO 3 $5000.0 ", cantidad: "20"}
+        Gson gson = new Gson();
 
-        // }
+        // Leer el cuerpo de la solicitud
+        StringBuilder sb = new StringBuilder();
+        try (BufferedReader reader = req.getReader()) {
+            String line;
+            while ((line = reader.readLine()) != null) {
+                sb.append(line);
+            }
+        }
 
-        String idOrden = req.getParameter("idOrden");
-        String platillosJson = req.getParameter("platillos");
+        String json = sb.toString();
+        System.out.println("JSON recibido: " + json);
+
+        // Convertir el JSON a un mapa
+        Map<String, Object> map = gson.fromJson(json, new TypeToken<Map<String, Object>>() {
+        }.getType());
+
+        String idOrden = (String) map.get("idOrden");
+        String platillosJson = gson.toJson(map.get("platillos"));
 
         // Validar el idOrden
         if (idOrden == null || idOrden.isEmpty()) {
@@ -65,29 +65,47 @@ public class DescriopcionPedido extends HttpServlet {
         }
 
         if (!errors.isEmpty()) {
-            req.setAttribute("errores", errors);
-
+            sendErrorResponse(resp, errors);
             return;
         }
 
         try {
-            Gson gson = new Gson();
             List<InnerDescriopcionPedido> platillos = gson.fromJson(platillosJson,
                     new TypeToken<ArrayList<InnerDescriopcionPedido>>() {
                     }.getType());
+            if (platillos.isEmpty()) {
+                errors.put("platillos", "La lista de platillos no puede estar vacía");
+                sendErrorResponse(resp, errors);
+                return;
+            }
 
             for (InnerDescriopcionPedido platillo : platillos) {
+                // Mostrar en consola cada platillo procesado
+                System.out.println(
+                        "Procesando platillo: " + platillo.getIdPlatillo() + ", Cantidad: " + platillo.getCantidad());
 
+                DescripcioOrden descripcio = new DescripcioOrden();
+                descripcio.setId_orden(Long.parseLong(idOrden));
+                descripcio.setId_platillo(Long.parseLong(platillo.getIdPlatillo()));
+                descripcio.setCantidad(platillo.getCantidad());
+                descripcio.setEstatus(EnumEstatusDetalleOrder.EN_CURSO);
+                service.guardar(descripcio);
             }
 
         } catch (Exception e) {
-            try (PrintWriter out = resp.getWriter()) {
-                Gson gson = new Gson();
-                String jsonErrors = gson.toJson(errors);
-                out.print(jsonErrors);
-            }
+            errors.put("platillos", e.getMessage());
+            sendErrorResponse(resp, errors);
         }
+    }
 
+    private void sendErrorResponse(HttpServletResponse resp, Map<String, String> errors) throws IOException {
+        Gson gson = new Gson();
+        String jsonErrors = gson.toJson(errors);
+        resp.setContentType("application/json");
+        resp.setCharacterEncoding("UTF-8");
+        try (PrintWriter out = resp.getWriter()) {
+            out.print(jsonErrors);
+        }
     }
 
 }
