@@ -54,162 +54,169 @@ public class ReservaClientesServlet extends HttpServlet {
         String payid = req.getParameter("ordenToken");
 
         Map<String, String> errors = new HashMap<>();
-
         Long id_mesa = null;
         Long id_cliente = null;
-
-        String fechaAReservarStr = req.getParameter("fecha_a_reservar");
         LocalDateTime fechaAReservar = null;
 
+        // Validación de parámetros
+        validateParameters(req, errors);
+
+        // Validación y parseo de id_mesa
         try {
             id_mesa = Long.parseLong(req.getParameter("id_mesa"));
         } catch (NumberFormatException e) {
             errors.put("id_mesa", "Debe seleccionar una mesa válida");
         }
 
+        // Validación y parseo de fechaAReservar
         try {
-            fechaAReservar = LocalDateTime.parse(fechaAReservarStr, DateTimeFormatter.ISO_LOCAL_DATE_TIME);
+            fechaAReservar = LocalDateTime.parse(req.getParameter("fecha_a_reservar"),
+                    DateTimeFormatter.ISO_LOCAL_DATE_TIME);
         } catch (Exception e) {
             errors.put("fecha_a_reservar", "Debe seleccionar una fecha y hora válidas");
         }
 
-        String fechaNacimiento = req.getParameter("fechaNacimiento");
-        LocalDate fecha;
-        try {
-            Date fechaInput = inputFormat.parse(fechaNacimiento);
-            String formato = outputFormat.format(fechaInput);
-            fecha = LocalDate.parse(formato, DateTimeFormatter.ofPattern("dd/MM/yyyy"));
-        } catch (Exception e) {
-            fecha = null;
-        }
-
-        Long num_interno = 0L;
-        Long num_externo = 0L;
-        Integer cp = 0;
-
-        if (nombre == null || nombre.isEmpty()) {
-            errors.put("nombre", "El nombre es requerido");
-        }
-
-        if (apPaterno == null || apPaterno.isEmpty()) {
-            errors.put("apPaterno", "El apellido paterno es requerido");
-        }
-
-        if (apMaterno == null || apMaterno.isEmpty()) {
-            errors.put("apMaterno", "El apellido materno es requerido");
-        }
-
-        if (telefono == null || telefono.isEmpty()) {
-            errors.put("telefono", "El teléfono es requerido");
-        }
-
-        if (correo == null || correo.isEmpty()) {
-            errors.put("correo", "El correo es requerido");
-        }
-
-        if (calle == null || calle.isEmpty()) {
-            errors.put("calle", "La calle es requerida");
-        }
-
-        if (numInteriorParam != null && !numInteriorParam.isEmpty()) {
-            try {
-                num_interno = Long.parseLong(numInteriorParam);
-            } catch (NumberFormatException e) {
-                errors.put("num_interno", "El número interno debe ser un número válido");
-            }
-        }
-
-        if (numExteriorParam == null || numExteriorParam.isEmpty()) {
-            errors.put("numExterior", "El número externo es requerido");
-        } else {
-            try {
-                num_externo = Long.parseLong(numExteriorParam);
-            } catch (NumberFormatException e) {
-                errors.put("num_externo", "El número externo debe ser un número válido");
-            }
-        }
-
-        if (colonia == null || colonia.isEmpty()) {
-            errors.put("colonia", "La colonia es requerida");
-        }
-
-        if (ciudad == null || ciudad.isEmpty()) {
-            errors.put("ciudad", "La ciudad es requerida");
-        }
-
-        if (cpParam == null || cpParam.isEmpty()) {
-            errors.put("cp", "El código postal es requerido");
-        } else {
-            try {
-                cp = Integer.parseInt(cpParam);
-            } catch (NumberFormatException e) {
-                errors.put("cp", "El código postal debe ser un número válido");
-            }
-        }
-
-        if (estado == null || estado.isEmpty()) {
-            errors.put("estado", "El estado es requerido");
-        }
-
-        if (fecha == null) {
-            errors.put("fechaNacimiento",
-                    "La fecha de nacimiento es requerida y debe tener el formato válido (YYYY-MM-DD)");
-        }
+        // Validación y parseo de fechaNacimiento
+        LocalDate fechaNacimiento = parseFechaNacimiento(req, errors, inputFormat, outputFormat);
 
         resp.setContentType("application/json");
 
         if (!errors.isEmpty()) {
-            try (PrintWriter out = resp.getWriter()) {
-                Gson gson = new Gson();
-                String jsonErrors = gson.toJson(errors);
-                out.print(jsonErrors);
+            sendJsonResponse(resp, errors, HttpServletResponse.SC_BAD_REQUEST);
+            return;
+        }
+
+        try (PrintWriter out = resp.getWriter()) {
+            Cliente cliente = createCliente(req, fechaNacimiento);
+            serviceCli.guardar(cliente);
+            Long clienteId = serviceCli.guardarReturnId(cliente);
+
+            if (clienteId != null) {
+                Reservacio reservacion = createReservacion(id_mesa, clienteId, fechaAReservar, payid);
+                servicerRes.guardar(reservacion);
+                resp.setStatus(HttpServletResponse.SC_OK);
+                out.print("OK");
+            } else {
+                errors.put("cliente", "Error al guardar el cliente");
+                sendJsonResponse(resp, errors, HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
             }
-        } else {
-            try (PrintWriter out = resp.getWriter()) {
-                Cliente cliente = new Cliente();
-                cliente.setNombre(nombre);
-                cliente.setApPaterno(apPaterno);
-                cliente.setApMaterno(apMaterno);
-                cliente.setTelefono(telefono);
-                cliente.setCorreo(correo);
-                cliente.setCalle(calle);
-                cliente.setNum_interior(num_interno != 0 ? num_interno : 0);
-                cliente.setNum_exterior(num_externo);
-                cliente.setColonia(colonia);
-                cliente.setCiudad(ciudad);
-                cliente.setCp(cp);
-                cliente.setEstado(EnumEstado.valueOf(estado));
-                cliente.setFecha_nacimiento(fecha);
-
-                try {
-                    serviceCli.guardar(cliente);
-                    Long id = serviceCli.guardarReturnId(cliente);
-
-                    if (id != null) {
-                        Reservacio reservacio = new Reservacio();
-                        reservacio.setId_mesa(id_mesa);
-                        reservacio.setId_cliente(id);
-                        reservacio.setFecha_a_reservar(fechaAReservar);
-                        reservacio.setFecha(LocalDate.now());
-                        reservacio.setEstatus(EnumReservacion.EN_CURSO);
-                        reservacio.setIdOrderPypal(payid);
-
-                        servicerRes.guardar(reservacio);
-                        out.print("OK");
-                    } else {
-                        errors.put("cliente", "Error al guardar el cliente");
-                        Gson gson = new Gson();
-                        String jsonErrors = gson.toJson(errors);
-                        out.print(jsonErrors);
-                    }
-                } catch (Exception e) {
-                    errors.put("reservacion", "Error al guardar la reservación: " + e.getMessage());
-                    Gson gson = new Gson();
-                    String jsonErrors = gson.toJson(errors);
-                    out.print(jsonErrors);
-                }
-            }
+        } catch (Exception e) {
+            errors.put("reservacion", "Error al guardar la reservación: " + e.getMessage());
+            sendJsonResponse(resp, errors, HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
         }
     }
 
+    private void validateParameters(HttpServletRequest req, Map<String, String> errors) {
+        // Validaciones de los parámetros recibidos
+        if (isNullOrEmpty(req.getParameter("nombre"))) {
+            errors.put("nombre", "El nombre es requerido");
+        }
+        if (isNullOrEmpty(req.getParameter("apPaterno"))) {
+            errors.put("apPaterno", "El apellido paterno es requerido");
+        }
+        if (isNullOrEmpty(req.getParameter("apMaterno"))) {
+            errors.put("apMaterno", "El apellido materno es requerido");
+        }
+        if (isNullOrEmpty(req.getParameter("telefono"))) {
+            errors.put("telefono", "El teléfono es requerido");
+        }
+        if (isNullOrEmpty(req.getParameter("correo"))) {
+            errors.put("correo", "El correo es requerido");
+        }
+        if (isNullOrEmpty(req.getParameter("calle"))) {
+            errors.put("calle", "La calle es requerida");
+        }
+        if (isNullOrEmpty(req.getParameter("numExterior"))) {
+            errors.put("numExterior", "El número externo es requerido");
+        }
+        if (isNullOrEmpty(req.getParameter("colonia"))) {
+            errors.put("colonia", "La colonia es requerida");
+        }
+        if (isNullOrEmpty(req.getParameter("ciudad"))) {
+            errors.put("ciudad", "La ciudad es requerida");
+        }
+        if (isNullOrEmpty(req.getParameter("cp"))) {
+            errors.put("cp", "El código postal es requerido");
+        }
+        if (isNullOrEmpty(req.getParameter("estado"))) {
+            errors.put("estado", "El estado es requerido");
+        }
+        if (isNullOrEmpty(req.getParameter("fechaNacimiento"))) {
+            errors.put("fechaNacimiento",
+                    "La fecha de nacimiento es requerida y debe tener el formato válido (YYYY-MM-DD)");
+        }
+    }
+
+    private boolean isNullOrEmpty(String param) {
+        return param == null || param.isEmpty();
+    }
+
+    private LocalDate parseFechaNacimiento(HttpServletRequest req, Map<String, String> errors,
+            SimpleDateFormat inputFormat, SimpleDateFormat outputFormat) {
+        LocalDate fechaNacimiento = null;
+        try {
+            Date fechaInput = inputFormat.parse(req.getParameter("fechaNacimiento"));
+            String formattedDate = outputFormat.format(fechaInput);
+            fechaNacimiento = LocalDate.parse(formattedDate, DateTimeFormatter.ofPattern("dd/MM/yyyy"));
+        } catch (Exception e) {
+            errors.put("fechaNacimiento", "La fecha de nacimiento es inválida");
+        }
+        return fechaNacimiento;
+    }
+
+    private Cliente createCliente(HttpServletRequest req, LocalDate fechaNacimiento) {
+        Cliente cliente = new Cliente();
+        cliente.setNombre(req.getParameter("nombre"));
+        cliente.setApPaterno(req.getParameter("apPaterno"));
+        cliente.setApMaterno(req.getParameter("apMaterno"));
+        cliente.setTelefono(req.getParameter("telefono"));
+        cliente.setCorreo(req.getParameter("correo"));
+        cliente.setCalle(req.getParameter("calle"));
+        cliente.setNum_interior(parseLongOrDefault(req.getParameter("numInterior"), 0L));
+        cliente.setNum_exterior(parseLongOrDefault(req.getParameter("numExterior"), 0L));
+        cliente.setColonia(req.getParameter("colonia"));
+        cliente.setCiudad(req.getParameter("ciudad"));
+        cliente.setCp(parseIntOrDefault(req.getParameter("cp"), 0));
+        cliente.setEstado(EnumEstado.valueOf(req.getParameter("estado")));
+        cliente.setFecha_nacimiento(fechaNacimiento);
+        return cliente;
+    }
+
+    private Reservacio createReservacion(Long id_mesa, Long id_cliente, LocalDateTime fechaAReservar, String payid) {
+        Reservacio reservacion = new Reservacio();
+        reservacion.setId_mesa(id_mesa);
+        reservacion.setId_cliente(id_cliente);
+        reservacion.setFecha_a_reservar(fechaAReservar);
+        reservacion.setFecha(LocalDate.now());
+        reservacion.setEstatus(EnumReservacion.EN_CURSO);
+        reservacion.setIdOrderPypal(payid);
+
+        return reservacion;
+    }
+
+    private Long parseLongOrDefault(String param, Long defaultValue) {
+        try {
+            return Long.parseLong(param);
+        } catch (NumberFormatException e) {
+            return defaultValue;
+        }
+    }
+
+    private Integer parseIntOrDefault(String param, Integer defaultValue) {
+        try {
+            return Integer.parseInt(param);
+        } catch (NumberFormatException e) {
+            return defaultValue;
+        }
+    }
+
+    private void sendJsonResponse(HttpServletResponse resp, Map<String, String> errors, int statusCode)
+            throws IOException {
+        resp.setStatus(statusCode);
+        try (PrintWriter out = resp.getWriter()) {
+            Gson gson = new Gson();
+            String jsonErrors = gson.toJson(errors);
+            out.print(jsonErrors);
+        }
+    }
 }
