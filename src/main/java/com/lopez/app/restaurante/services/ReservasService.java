@@ -4,6 +4,7 @@ import com.lopez.app.restaurante.models.Cliente;
 import com.lopez.app.restaurante.models.Mesa;
 import com.lopez.app.restaurante.models.Reservacio;
 import com.lopez.app.restaurante.repositorys.IRepository;
+import com.lopez.app.restaurante.repositorys.ReservasRepository;
 
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -77,8 +78,11 @@ public class ReservasService implements IReservasService<Reservacio> {
 
     @Override
     public Long guardarReturnId(Reservacio t) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'guardarReturnId'");
+        try {
+            return reservaRepo.guardarReturnId(t);
+        } catch (SQLException e) {
+            throw new RuntimeException(e.getMessage(), e.getCause());
+        }
     }
 
 }

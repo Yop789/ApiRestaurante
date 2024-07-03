@@ -88,13 +88,23 @@ public class ReservaClientesServlet extends HttpServlet {
 
         try (PrintWriter out = resp.getWriter()) {
             Cliente cliente = createCliente(req, fechaNacimiento);
-            serviceCli.guardar(cliente);
+
             Long clienteId = serviceCli.guardarReturnId(cliente);
 
             if (clienteId != null) {
                 Reservacio reservacion = createReservacion(id_mesa, clienteId, fechaAReservar, payid);
-                servicerRes.guardar(reservacion);
+                Long reservacionId = servicerRes.guardarReturnId(reservacion);
                 resp.setStatus(HttpServletResponse.SC_OK);
+                if (reservacionId != null) {
+                    Map<String, Object> response = new HashMap<>();
+                    resp.setStatus(201);
+                    response.put("reservacionId", reservacionId);
+                    response.put("status", "success");
+                    String json = new Gson().toJson(response);
+
+                    out.print(json);
+                    return;
+                }
                 out.print("OK");
             } else {
                 errors.put("cliente", "Error al guardar el cliente");
@@ -104,6 +114,7 @@ public class ReservaClientesServlet extends HttpServlet {
             errors.put("reservacion", "Error al guardar la reservación: " + e.getMessage());
             sendJsonResponse(resp, errors, HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
         }
+
     }
 
     private void validateParameters(HttpServletRequest req, Map<String, String> errors) {

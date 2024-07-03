@@ -53,28 +53,26 @@ public class ReservasRepository implements IRepository<Reservacio> {
 
     @Override
     public void guardar(Reservacio t) throws SQLException {
-
         String sql = "";
         if (t.getId() != null && t.getId() > 0) {
-            sql = "UPDATE RESERVAS SET ID_MESA=?, ID_CLIENTE=?, FECHA=?, FECHA_A_RESERVAR=?, ESTATUS=?, idOrderPypal=? WHERE ID_RESERVA=?";
+            sql = "UPDATE RESERVAS SET ID_MESA=?,ID_CLIENTE=?,FECHA=?,FECHA_A_RESERVAR=?,ESTATUS=? WHERE ID_RESERVA=?";
         } else {
-            sql = "INSERT INTO RESERVAS ( ID_RESERVA, ID_CLIENTE, ID_MESA, FECHA, FECHA_A_RESERVAR, ESTATUS, idOrderPypal) VALUES ( SEQUENCE_RESERVAS.NEXTVAL,?,?,?,?,?,?)";
+            sql = "INSERT INTO RESERVAS(ID_RESERVA,ID_CLIENTE,ID_MESA,FECHA,FECHA_A_RESERVAR,ESTATUS,idOrderPypal) VALUES(SEQUENCE_RESERVAS.NEXTVAL,?,?,?,?,?,?)";
         }
         try (PreparedStatement stm = conn.prepareStatement(sql)) {
-            stm.setLong(1, t.getId_mesa());
-            stm.setLong(2, t.getId_cliente());
+
+            stm.setLong(1, t.getId_cliente());
+            stm.setLong(2, t.getId_mesa());
             stm.setDate(3, Date.valueOf(t.getFecha()));
             stm.setTimestamp(4, Timestamp.valueOf(t.getFecha_a_reservar()));
             stm.setString(5, t.getEstatus().toString());
             stm.setString(6, t.getIdOrderPypal());
-
             if (t.getId() != null && t.getId() > 0) {
-                stm.setLong(7, t.getId());
+                stm.setLong(6, t.getId());
             }
-
             stm.executeUpdate();
         } catch (SQLException e) {
-            throw new SQLException("Error al ejecutar la consulta SQL: " + e.getMessage());
+            throw new SQLException(e);
         }
 
     }
@@ -96,14 +94,28 @@ public class ReservasRepository implements IRepository<Reservacio> {
         reservacio.setFecha(rs.getDate("FECHA").toLocalDate());
         reservacio.setFecha_a_reservar(rs.getTimestamp("FECHA_A_RESERVAR").toLocalDateTime());
         reservacio.setEstatus(EnumReservacion.valueOf(rs.getString("ESTATUS")));
-        reservacio.setIdOrderPypal(rs.getString("IDORDERPYPAL"));
+        reservacio.setIdOrderPypal(rs.getString("idOrderPypal"));
         return reservacio;
     }
 
     @Override
     public Long guardarReturnId(Reservacio t) throws SQLException {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'guardarReturnId'");
+        String sql = "INSERT INTO RESERVAS(ID_RESERVA,ID_CLIENTE,ID_MESA,FECHA,FECHA_A_RESERVAR,ESTATUS,idOrderPypal) VALUES(SEQUENCE_RESERVAS.NEXTVAL,?,?,?,?,?,?)";
+        try (PreparedStatement stm = conn.prepareStatement(sql, new String[] { "ID_RESERVA" })) {
+            stm.setLong(1, t.getId_cliente());
+            stm.setLong(2, t.getId_mesa());
+            stm.setDate(3, Date.valueOf(t.getFecha()));
+            stm.setTimestamp(4, Timestamp.valueOf(t.getFecha_a_reservar()));
+            stm.setString(5, t.getEstatus().toString());
+            stm.setString(6, t.getIdOrderPypal());
+            stm.executeUpdate();
+            try (ResultSet rs = stm.getGeneratedKeys()) {
+                if (rs.next()) {
+                    return rs.getLong(1);
+                }
+            }
+        }
+        return null;
     }
 
 }
