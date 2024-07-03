@@ -28,7 +28,7 @@ import com.lopez.app.restaurante.services.IService;
 import com.lopez.app.restaurante.services.ReservasService;
 
 @WebServlet("/altaReservacion")
-public class ListarClientesServlet extends HttpServlet {
+public class ReservaClientesServlet extends HttpServlet {
 
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
